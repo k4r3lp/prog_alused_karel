@@ -6,6 +6,8 @@ def korrutamine(a, b):
     return a * b
 def jagamine(a, b):
     return a / b
+def taisarvuline_jagamine(a, b):
+    return a // b
 
 
 x = int(input("Sisesta esimene arv: "))
@@ -16,7 +18,8 @@ operaatorid = {
     "+": summa,
     "-": lahutamine,
     "*": korrutamine,
-    "/": jagamine}
+    "/": jagamine,
+    "//": taisarvuline_jagamine}
 if tehe in operaatorid:
     print("Tulemus:", operaatorid[tehe](x, y))
 else:
