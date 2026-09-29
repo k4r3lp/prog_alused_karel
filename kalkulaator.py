@@ -19,5 +19,7 @@ operaatorid = {
     "/": jagamine}
 if tehe in operaatorid:
     print("Tulemus:", operaatorid[tehe](x, y))
+else:
+    print("Sisestasite mittesobiva tehte!")
 
 
