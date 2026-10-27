@@ -8,7 +8,7 @@ Ajad arvutatakse Eesti ajavööndis (Europe/Tallinn), sõltumata arvuti enda sea
 Käivita:  python elering_hinnad.py
 """
 import csv
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 import requests
@@ -56,9 +56,35 @@ def main() -> None:
 
     odavaim = min(hinnad, key=hinnad.get)
     kalleim = max(hinnad, key=hinnad.get)
-    print(f"\nOdavaim: {odavaim:%H:%M} {hinnad[odavaim]:.2f} EUR/MWh")
-    print(f"Kalleim: {kalleim:%H:%M} {hinnad[kalleim]:.2f} EUR/MWh")
+    print(f"\nOdavaim 15min: {odavaim:%H:%M} {hinnad[odavaim]:.2f} EUR/MWh")
+    print(f"Kalleim 15min: {kalleim:%H:%M} {hinnad[kalleim]:.2f} EUR/MWh")
 
+
+
+
+    hinnad_list = sorted(hinnad.items())
+    akna_pikkus = 16  # 4 tundi * 4 (15 min intervallid)
+
+    odavaim_4h_summa = float('inf')
+    odavaim_4h_algus = None
+    odavaim_4h_lopp = None
+
+    if len(hinnad_list) >= akna_pikkus:
+        for i in range(len(hinnad_list) - akna_pikkus + 1):
+            aken = hinnad_list[i : i + akna_pikkus]
+            akna_summa = sum(hind for aeg, hind in aken)
+
+            if akna_summa < odavaim_4h_summa:
+                odavaim_4h_summa = akna_summa
+                odavaim_4h_algus = aken[0][0]
+                # Viimase intervalli algusaeg + 15 min annab perioodi tegeliku lõpu
+                odavaim_4h_lopp = aken[-1][0] + timedelta(minutes=15)
+
+        keskmine_hind = odavaim_4h_summa / akna_pikkus
+        print(f"Odavaim 4 järjestikust tundi: {odavaim_4h_algus:%H:%M} - {odavaim_4h_lopp:%H:%M}")
+        print(f"Selle 4h perioodi keskmine hind: {keskmine_hind:.2f} EUR/MWh")
+    else:
+        print("\nEi ole piisavalt andmeid 4-tunnise perioodi arvutamiseks.")
 
     with open("odav.txt", "w", encoding="utf-8") as f:
         f.write(f"Aeg: {odavaim:%Y-%m-%d %H:%M}\nOdavaim hind: {hinnad[odavaim]:.2f} EUR/MWh\n")
@@ -66,7 +92,7 @@ def main() -> None:
     with open("kallis.txt", "w", encoding="utf-8") as f:
         f.write(f"Aeg: {kalleim:%Y-%m-%d %H:%M}\nKalleim hind: {hinnad[kalleim]:.2f} EUR/MWh\n")
 
-    print("Salvestatud failidesse odav.txt ja kallis.txt")
+    print("\nSalvestatud failidesse odav.txt ja kallis.txt")
 
 
 if __name__ == "__main__":
